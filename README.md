@@ -5,3 +5,4 @@
 -Install Tailwind CSS
 -Install DaisyUI
 -Add NavBar component to App.jsx
+-Create a NavBar.jsx seperate Component file
