@@ -1,5 +1,6 @@
 import React from "react";
 import { useSelector } from "react-redux";
+import { Link } from "react-router-dom";
 
 const NavBar = () => {
   const user = useSelector((store) => store.user);
@@ -7,7 +8,9 @@ const NavBar = () => {
   return (
     <div className="navbar bg-base-300 shadow-sm">
       <div className="flex-1">
-        <span className="btn btn-ghost text-xl">🧑‍💻DevTInder</span>
+        <Link to="/" className="btn btn-ghost text-xl">
+          🧑‍💻DevTInder
+        </Link>
       </div>
 
       {user && (
@@ -37,9 +40,9 @@ const NavBar = () => {
               role="menu"
             >
               <li>
-                <button type="button" role="menuitem">
+                <Link className="justify-between" to="/profile">
                   Profile <span className="badge">New</span>
-                </button>
+                </Link>
               </li>
               <li>
                 <button type="button" role="menuitem">

@@ -11,6 +11,10 @@
 -Wherenver you're making API call so pass axios=> { withCredentials: true}
 -Install Redux Toolkit - https://redux.js.org/tutorials/quick-start
 -install react-redux + @reduxjs/toolkit => configureStore => Provider => createSlider => add reducer to store
+-Add redux devtools in chrome
+-Login and see if your data is coming properly in the store
+-NavBar should update as soon as user logs in
+-Refactor our code to add constants file + create a components folder
 
 Body
 NavBar
