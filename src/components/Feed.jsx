@@ -15,7 +15,6 @@ const Feed = () => {
     if (feed && feed.length > 0) return;
 
     try {
-      console.log("Fetching feed from:", BASE_URL + "/feed");
       const res = await axios.get(BASE_URL + "/feed", {
         withCredentials: true,
       });
