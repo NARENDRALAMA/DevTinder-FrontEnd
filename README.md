@@ -24,6 +24,7 @@
 -Show Toast Message on save of profile
 -See all my connections
 -See all my Connections Requests
+Features
 
 Body
 NavBar
