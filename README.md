@@ -24,7 +24,12 @@
 -Show Toast Message on save of profile
 -See all my connections
 -See all my Connections Requests
-Features
+Feature - Accept/Request Connection Request
+
+Remaining:
+-Send/ignore the user card form the feed
+-Signup New User
+-E2E Testing
 
 Body
 NavBar
