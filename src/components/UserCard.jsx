@@ -17,7 +17,10 @@ const UserCard = ({ user }) => {
       );
       dispatch(removeUserFromFeed(userId));
     } catch (err) {
-      console.error("Error sending request:", err);
+      console.error(
+        "Error sending request:",
+        err.response?.data || err.message
+      );
     }
   };
   return (
@@ -40,7 +43,7 @@ const UserCard = ({ user }) => {
             className="btn btn-secondary"
             onClick={() => handleSendRequest("interested", _id)}
           >
-            Intrested
+            Interested
           </button>
         </div>
       </div>

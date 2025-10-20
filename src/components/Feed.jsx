@@ -30,12 +30,10 @@ const Feed = () => {
     getFeed();
   }, []);
 
-  // Handle loading state
   if (!feed) {
-    return <div className="flex justify-center my-10">Loading...</div>;
+    return;
   }
 
-  // Handle empty feed
   if (feed.length === 0) {
     return <div className="flex justify-center my-10">No users found</div>;
   }
