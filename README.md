@@ -47,8 +47,9 @@ ssh -i "devTinder-secret.pem" ubuntu@ec2-13-236-209-119.ap-southeast-2.compute.a
     -sudo apt update
     -sudo apt install nginx
     -sudo systemctl start nginx
-    -Copy code from dist(build files ) to /var/www.html/
-    -sudo cp -r dist/\* /var/www/html/
+    -sudo systemctl enable nginx
+    -Copy code from dist(build files ) to /var/www/html/
+    -sudo scp -r dist/\* /var/www/html/
     -Enable port 80 of your instance
 
     -Backend
@@ -84,3 +85,28 @@ ssh -i "devTinder-secret.pem" ubuntu@ec2-13-236-209-119.ap-southeast-2.compute.a
         proxy_set_header Host $host;
         proxy_cache_bypass $http_upgrade;
     }
+
+#Adding a Custom Domain name
+
+-purchased domain name form godaddy
+-signup on cloudfare & add a new domian name
+-change the nameservers on godaddy and point it to cloudfare
+-wait for sometime till your nameservers are updated
+-DNS record: A devtinder.in 43.204.96.49
+-Enable SSL for website
+
+#Sending Emails via SES
+
+-Create a IAM user
+-Give Acess to AmazonSESFullAcess
+-Amazon SES:Create an Identity
+-Verify your domain name
+-Verify an email address
+-Install AWS SDK -v3
+-code Example-https://github.com/awsdocs/aws-doc-sdk-examples/tree/e73d687b0c6aca80451fbd185bb8bce7b2c69eb1/javascriptv3/example_code/ses#code-examples
+-Setup SesClient
+-Acess Credentials should be created in Iam under SecurityCredentials tab
+-Add the credentials to the env file
+-Write code for SESClient
+-Write code for Sending email address
+-Make the email dynamic by passing more params to the run function
