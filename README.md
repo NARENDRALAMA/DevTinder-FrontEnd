@@ -31,7 +31,7 @@ Remaining:
 -Signup New User
 -E2E Testing
 
-#Deployment
+# Deployment
 
 -Signup on AWS
 -Launch instance
@@ -63,7 +63,7 @@ ssh -i "devTinder-secret.pem" ubuntu@ec2-13-236-209-119.ap-southeast-2.compute.a
     -restart nginx- sudo systemctl restart nginx
     -Modify the BASEURL in frontedn project to "/api"
 
-#Nginx config:
+# Nginx config:
 
     Forntend =http://13.236.209.119/
     Backend =http://13.236.209.119:7777/
@@ -86,7 +86,7 @@ ssh -i "devTinder-secret.pem" ubuntu@ec2-13-236-209-119.ap-southeast-2.compute.a
         proxy_cache_bypass $http_upgrade;
     }
 
-#Adding a Custom Domain name
+# Adding a Custom Domain name
 
 -purchased domain name form godaddy
 -signup on cloudfare & add a new domian name
@@ -95,7 +95,7 @@ ssh -i "devTinder-secret.pem" ubuntu@ec2-13-236-209-119.ap-southeast-2.compute.a
 -DNS record: A devtinder.in 43.204.96.49
 -Enable SSL for website
 
-#Sending Emails via SES
+# Sending Emails via SES
 
 -Create a IAM user
 -Give Acess to AmazonSESFullAcess
@@ -110,3 +110,22 @@ ssh -i "devTinder-secret.pem" ubuntu@ec2-13-236-209-119.ap-southeast-2.compute.a
 -Write code for SESClient
 -Write code for Sending email address
 -Make the email dynamic by passing more params to the run function
+
+# Scheduling cron jobs in NodeJS
+
+-Installing node-cron
+-Learning about cron expressions syntax -crontab.guru
+-Schedule a job
+-date-fns
+-Find all the unique email Id who have got connection Request in previous day
+-Send Email
+-Explore queue mechanism to send bulk emails
+-Amazon SES Bulk Email
+-Make sendEmail function dynamic
+-bee-queue & bull npm packages
+
+# Payment system
+
+- Sign up on Stripe and create Account
+  -Created a UI for premium page
+  -Creating an API for create order in backend page
