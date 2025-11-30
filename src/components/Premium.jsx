@@ -37,19 +37,14 @@ const Premium = () => {
 
       const data = await response.json();
 
-      if (!data.id) {
+      if (!data.url) {
         alert("Failed to create payment session.");
         return;
       }
 
-      // Redirect to Stripe Checkout
-      const result = await stripe.redirectToCheckout({
-        sessionId: data.id,
-      });
-
-      if (result.error) {
-        alert(result.error.message);
-      }
+      // Redirect to Stripe Checkout using the modern approach
+      // Simply redirect to the checkout URL
+      window.location.href = data.url;
     } catch (error) {
       console.error("Checkout error:", error);
       alert("Something went wrong. Please try again.");
