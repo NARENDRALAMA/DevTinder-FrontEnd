@@ -16,7 +16,7 @@ const Premium = () => {
     try {
       const stripe = await stripePromise;
 
-      const response = await fetch(`${API_URL}api/create-checkout-session`, {
+      const response = await fetch(`${API_URL}/api/create-checkout-session`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
