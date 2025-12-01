@@ -5,27 +5,28 @@ const stripePromise = loadStripe(
   "pk_test_51SUbgsLiL0Js2Cy2aK4u4zOgBaWutKmRrNZVZ1sVRaJxIA55fxnBj6iNh2Fs1DZM2IsQ..."
 );
 
+const API_URL =
+  import.meta.env.VITE_API_URL ||
+  (import.meta.env.MODE === "production"
+    ? "https://dev-tinder.org"
+    : "http://localhost:7777");
+
 const Premium = () => {
   const handleCheckout = async (plan) => {
     try {
       const stripe = await stripePromise;
 
-      const response = await fetch(
-        "http://localhost:7777/create-checkout-session",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include", // This sends cookies
-          body: JSON.stringify({ plan }),
-        }
-      );
+      const response = await fetch(`${API_URL}/create-checkout-session`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({ plan }),
+      });
 
       if (response.status === 401) {
         alert("Please login first");
-        // Optionally redirect to login page
-        // window.location.href = '/login';
         return;
       }
 
@@ -42,8 +43,6 @@ const Premium = () => {
         return;
       }
 
-      // Redirect to Stripe Checkout using the modern approach
-      // Simply redirect to the checkout URL
       window.location.href = data.url;
     } catch (error) {
       console.error("Checkout error:", error);
