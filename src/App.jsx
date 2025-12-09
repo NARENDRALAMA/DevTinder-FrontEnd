@@ -11,6 +11,7 @@ import Requests from "./components/Requests";
 import Signup from "./components/Signup";
 import Premium from "./components/Premium";
 import Success from "./components/Success";
+import Chat from "./components/Chat";
 
 function App() {
   return (
@@ -27,6 +28,7 @@ function App() {
               <Route path="/connections" element={<Connections />} />
               <Route path="/premium" element={<Premium />} />
               <Route path="/success" element={<Success />} />
+              <Route path="/chat/:targetUserId" element={<Chat />} />
             </Route>
           </Routes>
         </BrowserRouter>

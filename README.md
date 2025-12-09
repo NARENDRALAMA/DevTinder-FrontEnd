@@ -126,6 +126,42 @@ ssh -i "devTinder-secret.pem" ubuntu@ec2-13-236-209-119.ap-southeast-2.compute.a
 
 # Payment system
 
-- Sign up on Stripe and create Account
-  -Created a UI for premium page
-  -Creating an API for create order in backend page
+-Sign up on Stripe and create Account
+-Get Publishable Key, Secret Key, Webhook Secret
+-npm install stripe
+-Create utils/stripe.js
+
+# Backend Setup:
+
+-Create pricing plans in Stripe dashboard
+-Copy Price IDs
+-Store them in backend
+-Create /create-checkout-session API
+-Map plan → priceId
+-Detect frontend URL
+-Create checkout session
+-Return session.url
+-Frontend redirects user to Stripe
+
+# Webhook Events Used
+
+-We only use 3 events:
+-checkout.session.completed → activate subscription
+-invoice.payment_succeeded → renew subscription
+-customer.subscription.deleted → cancel subscription
+
+# Webhook Setup:
+
+-Create /stripe webhook route (POST)
+-Get Stripe signature from headers
+-Verify event using webhook secret
+-Switch on event type
+-Handle only these 3 events:
+-checkout.session.completed → upgrade user
+-invoice.payment_succeeded → extend subscription
+-customer.subscription.deleted → downgrade user
+-Update user in database accordingly
+-Always respond with:
+-res.json({ received: true })
+
+# Real Time Chat using Websocket(Socket.io)
