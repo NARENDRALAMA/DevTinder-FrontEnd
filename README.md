@@ -165,3 +165,6 @@ ssh -i "devTinder-secret.pem" ubuntu@ec2-13-236-209-119.ap-southeast-2.compute.a
 -res.json({ received: true })
 
 # Real Time Chat using Websocket(Socket.io)
+
+-Build the UI for a chat window on /chat/:targetUserId
+-Setup socket.io in backend
