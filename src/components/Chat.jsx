@@ -9,14 +9,37 @@ const Chat = () => {
   const { targetUserId } = useParams();
   const [messages, setMessages] = useState([{ text: "Hello World!" }]);
 
+  const [newMessage, setNewMessage] = useState("");
+
   const user = useSelector((store) => store.user);
 
   const userId = user?._id;
 
   useEffect(() => {
+    if (!userId || !targetUserId) return;
+
     const socket = createSocketConnection();
-    socket.emit("joinChat", { userId, targetUserId });
-  }, []);
+    //As soon as the page loaded the socket connection is made and joinChat event is emitted
+    socket.emit("joinChat", {
+      firstName: user.firstName,
+      userId,
+      targetUserId,
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [userId, targetUserId]);
+
+  const sendMessage = () => {
+    const socket = createSocketConnection();
+    socket.emit("sendMessage", {
+      firstName: user.firstName,
+      userId,
+      targetUserId,
+      text: newMessage,
+    });
+  };
   console.log(targetUserId);
   return (
     <div className="w-1/2 mx-auto border border-gray-600 m-5 h-[70vh] flex flex-col">
@@ -38,9 +61,15 @@ const Chat = () => {
         })}
       </div>
       <div className="p-5 border-t border-gray-200 flex items-center gap-2">
-        <input className="flex-1 border border-gray 500 text-white rounded p-2"></input>
+        <input
+          value={newMessage}
+          onChange={(e) => setNewMessage(e.target.value)}
+          className="flex-1 border border-gray 500 text-white rounded p-2"
+        ></input>
 
-        <button className="btn btn-secondary">Send</button>
+        <button onClick={sendMessage} className="btn btn-secondary">
+          Send
+        </button>
       </div>
     </div>
   );
