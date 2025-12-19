@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useEffect } from "react";
 import { createSocketConnection } from "../utils/socket";
 import { useSelector } from "react-redux";
+import axios from "axios";
+import { BASE_URL } from "../utils/constants";
 
 const Chat = () => {
   const { targetUserId } = useParams();
@@ -14,6 +16,30 @@ const Chat = () => {
   const user = useSelector((store) => store.user);
 
   const userId = user?._id;
+
+  const socketRef = useRef(null);
+
+  const fetchChatMessages = async () => {
+    const chat = await axios.get(BASE_URL + "/chat/" + targetUserId, {
+      withCredentials: true,
+    });
+
+    console.log(chat.data.messages);
+
+    const chatMessages = chat?.data?.messages.map((msg) => {
+      const { senderId, text } = msg;
+      return {
+        firstName: senderId?.firstName,
+        lastName: senderId?.lastName,
+        text,
+      };
+    });
+    setMessages(chatMessages);
+  };
+
+  useEffect(() => {
+    fetchChatMessages();
+  }, []);
 
   useEffect(() => {
     if (!userId || !targetUserId) return;
@@ -26,9 +52,12 @@ const Chat = () => {
       targetUserId,
     });
 
-    socket.on("messageReceived", ({ firstName, text }) => {
+    socket.on("messageReceived", ({ firstName, lastName, text }) => {
       console.log(firstName, " " + text);
-      setMessages((prevMessages) => [...prevMessages, { firstName, text }]);
+      setMessages((prevMessages) => [
+        ...prevMessages,
+        { firstName, lastName, text },
+      ]);
     });
 
     return () => {
@@ -40,13 +69,14 @@ const Chat = () => {
     const socket = createSocketConnection();
     socket.emit("sendMessage", {
       firstName: user.firstName,
+      lastName: user.lastName,
       userId,
       targetUserId,
       text: newMessage,
     });
     setNewMessage("");
   };
-  console.log(targetUserId);
+
   return (
     <div className="w-2/4 mx-auto border border-gray-600 m-5 h-[70vh] flex flex-col">
       <h1 className="p-5 border-b border-gray-600">Chat</h1>
@@ -55,7 +85,7 @@ const Chat = () => {
           return (
             <div key={index} className="chat chat-start">
               <div className="chat-header">
-                {msg.firstName}
+                {`${msg.firstName} ${msg.lastName}`}
                 <time className="text-xs opacity-50">2 hours ago</time>
               </div>
               <div className="chat-bubble">{msg.text}</div>
