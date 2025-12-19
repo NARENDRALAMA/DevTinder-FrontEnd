@@ -44,7 +44,10 @@ const Chat = () => {
   useEffect(() => {
     if (!userId || !targetUserId) return;
 
+    //Creating socket connection once and storing it in a useRef
     const socket = createSocketConnection();
+    socketRef.current = socket;
+
     //As soon as the page loaded the socket connection is made and joinChat event is emitted
     socket.emit("joinChat", {
       firstName: user.firstName,
@@ -52,6 +55,7 @@ const Chat = () => {
       targetUserId,
     });
 
+    //Listen for incoming messages
     socket.on("messageReceived", ({ firstName, lastName, text }) => {
       console.log(firstName, " " + text);
       setMessages((prevMessages) => [
@@ -60,21 +64,25 @@ const Chat = () => {
       ]);
     });
 
+    //Cleanup on unmount
     return () => {
       socket.disconnect();
     };
   }, [userId, targetUserId]);
 
   const sendMessage = () => {
-    const socket = createSocketConnection();
-    socket.emit("sendMessage", {
-      firstName: user.firstName,
-      lastName: user.lastName,
-      userId,
-      targetUserId,
-      text: newMessage,
-    });
-    setNewMessage("");
+    //Using the socket connection stored in useRef
+
+    if (socketRef.current && newMessage.trim() !== "") {
+      socketRef.current.emit("sendMessage", {
+        firstName: user.firstName,
+        lastName: user.lastName,
+        userId,
+        targetUserId,
+        text: newMessage,
+      });
+      setNewMessage("");
+    }
   };
 
   return (
