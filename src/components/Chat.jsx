@@ -6,6 +6,7 @@ import { createSocketConnection } from "../utils/socket";
 import { useSelector } from "react-redux";
 import axios from "axios";
 import { BASE_URL } from "../utils/constants";
+import { useRef } from "react";
 
 const Chat = () => {
   const { targetUserId } = useParams();
@@ -19,6 +20,36 @@ const Chat = () => {
 
   const socketRef = useRef(null);
 
+  //TimeStamp Logic
+  const formatTimestamp = (timestamp) => {
+    const now = new Date();
+    const messageTime = new Date(timestamp);
+    const diffInSeconds = Math.floor((now - messageTime) / 1000);
+
+    if (diffInSeconds < 60) {
+      return "Just now";
+    } else if (diffInSeconds < 3600) {
+      const minutes = Math.floor(diffInSeconds / 60);
+      return `${minutes} ${minutes === 1 ? "minute" : "minutes"} ago`;
+    } else if (diffInSeconds < 86400) {
+      const hours = Math.floor(diffInSeconds / 3600);
+      return `${hours} ${hours === 1 ? "hour" : "hours"} ago`;
+    } else if (diffInSeconds < 604800) {
+      const days = Math.floor(diffInSeconds / 86400);
+      return `${days} ${days === 1 ? "day" : "days"} ago`;
+    } else {
+      // Showing actual date for older messages
+      return messageTime.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year:
+          messageTime.getFullYear() !== now.getFullYear()
+            ? "numeric"
+            : undefined,
+      });
+    }
+  };
+
   const fetchChatMessages = async () => {
     const chat = await axios.get(BASE_URL + "/chat/" + targetUserId, {
       withCredentials: true,
@@ -27,7 +58,7 @@ const Chat = () => {
     console.log(chat.data.messages);
 
     const chatMessages = chat?.data?.messages.map((msg) => {
-      const { senderId, text } = msg;
+      const { senderId, text, createdAt } = msg;
       return {
         firstName: senderId?.firstName,
         lastName: senderId?.lastName,
@@ -56,12 +87,14 @@ const Chat = () => {
     });
 
     //Listen for incoming messages
-    socket.on("messageReceived", ({ firstName, lastName, text }) => {
+    socket.on("messageReceived", ({ firstName, lastName, text, createdAt }) => {
       console.log(firstName, " " + text);
-      setMessages((prevMessages) => [
-        ...prevMessages,
-        { firstName, lastName, text },
-      ]);
+      if (firstName !== user.firstName || lastName !== user.lastName) {
+        setMessages((prevMessages) => [
+          ...prevMessages,
+          { firstName, lastName, text, createdAt },
+        ]);
+      }
     });
 
     //Cleanup on unmount
@@ -74,6 +107,17 @@ const Chat = () => {
     //Using the socket connection stored in useRef
 
     if (socketRef.current && newMessage.trim() !== "") {
+      //Immediately adding the message to the local state(optimistic update)
+
+      const newMsg = {
+        firstName: user.firstName,
+        lastName: user.lastName,
+        text: newMessage,
+        createdAt: new Date().toISOString(),
+      };
+      setMessages((prevMessages) => [...prevMessages, newMsg]);
+
+      //Then emiting to socket
       socketRef.current.emit("sendMessage", {
         firstName: user.firstName,
         lastName: user.lastName,
@@ -94,7 +138,9 @@ const Chat = () => {
             <div key={index} className="chat chat-start">
               <div className="chat-header">
                 {`${msg.firstName} ${msg.lastName}`}
-                <time className="text-xs opacity-50">2 hours ago</time>
+                <time className="text-xs opacity-50">
+                  {formatTimestamp(msg.createdAt)}
+                </time>
               </div>
               <div className="chat-bubble">{msg.text}</div>
               <div className="chat-footer opacity-50">Seen</div>
