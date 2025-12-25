@@ -10,6 +10,7 @@ import { useRef } from "react";
 
 const Chat = () => {
   const { targetUserId } = useParams();
+
   const [messages, setMessages] = useState([]);
 
   const [newMessage, setNewMessage] = useState("");
@@ -63,6 +64,7 @@ const Chat = () => {
         firstName: senderId?.firstName,
         lastName: senderId?.lastName,
         text,
+        createdAt,
       };
     });
     setMessages(chatMessages);
@@ -89,6 +91,7 @@ const Chat = () => {
     //Listen for incoming messages
     socket.on("messageReceived", ({ firstName, lastName, text, createdAt }) => {
       console.log(firstName, " " + text);
+
       if (firstName !== user.firstName || lastName !== user.lastName) {
         setMessages((prevMessages) => [
           ...prevMessages,
@@ -135,7 +138,13 @@ const Chat = () => {
       <div className="flex-1 overflow-scroll p-5">
         {messages.map((msg, index) => {
           return (
-            <div key={index} className="chat chat-start">
+            <div
+              key={index}
+              className={
+                "chat" +
+                (user.firstName === msg.firstName ? " chat-end" : " chat-start")
+              }
+            >
               <div className="chat-header">
                 {`${msg.firstName} ${msg.lastName}`}
                 <time className="text-xs opacity-50">
