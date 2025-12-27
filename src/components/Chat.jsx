@@ -15,6 +15,9 @@ const Chat = () => {
 
   const [newMessage, setNewMessage] = useState("");
 
+  const [targetUserOnline, setTargetUserOnline] = useState(false);
+  const [targetUserLastSeen, setTargetUserLastSeen] = useState(null);
+
   const user = useSelector((store) => store.user);
 
   const userId = user?._id;
@@ -23,6 +26,10 @@ const Chat = () => {
 
   //TimeStamp Logic
   const formatTimestamp = (timestamp) => {
+    if (!timestamp) {
+      return "";
+    }
+
     const now = new Date();
     const messageTime = new Date(timestamp);
     const diffInSeconds = Math.floor((now - messageTime) / 1000);
@@ -63,6 +70,7 @@ const Chat = () => {
       return {
         firstName: senderId?.firstName,
         lastName: senderId?.lastName,
+        photoUrl: senderId.photoUrl,
         text,
         createdAt,
       };
@@ -89,16 +97,37 @@ const Chat = () => {
     });
 
     //Listen for incoming messages
-    socket.on("messageReceived", ({ firstName, lastName, text, createdAt }) => {
-      console.log(firstName, " " + text);
+    socket.on(
+      "messageReceived",
+      ({ firstName, lastName, photoUrl, text, createdAt }) => {
+        console.log(firstName, " " + text);
 
-      if (firstName !== user.firstName || lastName !== user.lastName) {
-        setMessages((prevMessages) => [
-          ...prevMessages,
-          { firstName, lastName, text, createdAt },
-        ]);
+        if (firstName !== user.firstName || lastName !== user.lastName) {
+          setMessages((prevMessages) => [
+            ...prevMessages,
+            { firstName, lastName, photoUrl, text, createdAt },
+          ]);
+        }
       }
-    });
+    );
+
+    // Listen for online status updates
+
+    socket.on(
+      "userOnlineStatus",
+      ({ userId: statusUserId, isOnline, lastSeen }) => {
+        console.log(
+          "Received online status:",
+          statusUserId,
+          isOnline,
+          lastSeen
+        );
+        if (statusUserId === targetUserId) {
+          setTargetUserOnline(isOnline);
+          setTargetUserLastSeen(lastSeen);
+        }
+      }
+    );
 
     //Cleanup on unmount
     return () => {
@@ -115,6 +144,7 @@ const Chat = () => {
       const newMsg = {
         firstName: user.firstName,
         lastName: user.lastName,
+        photoUrl: user.photoUrl,
         text: newMessage,
         createdAt: new Date().toISOString(),
       };
@@ -124,6 +154,7 @@ const Chat = () => {
       socketRef.current.emit("sendMessage", {
         firstName: user.firstName,
         lastName: user.lastName,
+        photoUrl: user.photoUrl,
         userId,
         targetUserId,
         text: newMessage,
@@ -134,6 +165,34 @@ const Chat = () => {
 
   return (
     <div className="w-2/4 mx-auto border border-gray-600 m-5 h-[70vh] flex flex-col">
+      {/*Chat Header with Online Status */}
+      <div className="p-5 border-b border-gray-600 flex items-center gap-3">
+        <div className="relative">
+          {/* Avatar placeholder */}
+
+          <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center">
+            <span className="text-white text-sm">👤</span>
+          </div>
+
+          {/*  Green dot indicator*/}
+          {targetUserOnline && (
+            <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-gray-800"></div>
+          )}
+        </div>
+
+        {/* Status text */}
+
+        <p className="text-xs text-gray-400">
+          {targetUserOnline ? (
+            <span className="text-green-500"> Online</span>
+          ) : targetUserLastSeen ? (
+            <span> Last seen: {formatTimestamp(targetUserLastSeen)}</span>
+          ) : (
+            <span> Offline</span>
+          )}
+        </p>
+      </div>
+
       <h1 className="p-5 border-b border-gray-600">Chat</h1>
       <div className="flex-1 overflow-scroll p-5">
         {messages.map((msg, index) => {
@@ -145,6 +204,15 @@ const Chat = () => {
                 (user.firstName === msg.firstName ? " chat-end" : " chat-start")
               }
             >
+              <div className="chat-image avatar">
+                <div className="w-10 rounded-full">
+                  <img
+                    alt="Tailwind CSS chat bubble component"
+                    src={msg.photoUrl}
+                  />
+                </div>
+              </div>
+
               <div className="chat-header">
                 {`${msg.firstName} ${msg.lastName}`}
                 <time className="text-xs opacity-50">
@@ -161,7 +229,8 @@ const Chat = () => {
         <input
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
-          className="flex-1 border border-gray 500 text-white rounded p-2"
+          onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+          className="flex-1 border border-gray-500 text-white rounded p-2"
         ></input>
 
         <button onClick={sendMessage} className="btn btn-secondary">

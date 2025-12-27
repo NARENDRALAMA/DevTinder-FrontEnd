@@ -168,3 +168,52 @@ ssh -i "devTinder-secret.pem" ubuntu@ec2-13-236-209-119.ap-southeast-2.compute.a
 
 -Build the UI for a chat window on /chat/:targetUserId
 -Setup socket.io in backend
+
+# Backend – Socket:
+
+-Setup socket.io with CORS
+-Each tab/device = one socket
+-Rooms contain sockets, not users
+
+# Room ID:
+
+-getSecretRoomId(userId, targetUserId)
+-SHA-256 hash of sorted IDs
+-Same room for both users
+
+# joinChat:
+
+# Frontend emits joinChat
+
+# Backend:
+
+-Generates roomId
+-socket.join(roomId)
+-Server decides who can join
+-sendMessage
+-Frontend emits sendMessage
+
+# Backend:
+
+-Find/create chat
+-Save message to DB
+-Emit messageReceived to room
+-messageReceived
+-Sent to all sockets in room
+-Includes text + timestamp
+-Frontend appends message to state
+-Backend – Chat API
+
+# GET /chat/:targetUserId
+
+-Auth protected
+-Finds chat using both user IDs
+-Creates chat if missing
+-Returns messages with sender info
+
+# Frontend – Chat.jsx
+
+-fetchchatmessages--> function fetch the chatmessages history and display it
+-on use effect :
+-we create the socket connection first and storee on the user ref so that we don't have to recreate the connection again and again
+-we emit the join chat which will join our socket to the room and on the bacjent will rmit the message received on the room and we extract data form room and append on the message array and rerender and the recevier will see the sent message
