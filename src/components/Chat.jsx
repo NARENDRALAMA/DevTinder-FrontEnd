@@ -18,6 +18,8 @@ const Chat = () => {
   const [targetUserOnline, setTargetUserOnline] = useState(false);
   const [targetUserLastSeen, setTargetUserLastSeen] = useState(null);
 
+  const messagesEndRef = useRef(null);
+
   const user = useSelector((store) => store.user);
 
   const userId = user?._id;
@@ -58,6 +60,10 @@ const Chat = () => {
     }
   };
 
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
   const fetchChatMessages = async () => {
     const chat = await axios.get(BASE_URL + "/chat/" + targetUserId, {
       withCredentials: true,
@@ -81,6 +87,10 @@ const Chat = () => {
   useEffect(() => {
     fetchChatMessages();
   }, []);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   useEffect(() => {
     if (!userId || !targetUserId) return;
@@ -224,6 +234,7 @@ const Chat = () => {
             </div>
           );
         })}
+        <div ref={messagesEndRef} />
       </div>
       <div className="p-5 border-t border-gray-200 flex items-center gap-2">
         <input
