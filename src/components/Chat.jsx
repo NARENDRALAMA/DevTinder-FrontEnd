@@ -84,6 +84,39 @@ const Chat = () => {
     setMessages(chatMessages);
   };
 
+  const markMessagesAsSeen = () => {
+    if (socketRef.current && targetUserId) {
+      socketRef.current.emit("markAsSeen", {
+        userId,
+        targetUserId,
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (messages.length > 0) {
+      const timer = setTimeout(() => {
+        markMessagesAsSeen();
+      }, 500);
+
+      return () => clearTimeout(timer);
+    }
+  }, [messages.length, targetUserId]);
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        markMessagesAsSeen();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [messages.length, targetUserId]);
+
   useEffect(() => {
     fetchChatMessages();
   }, []);
@@ -109,17 +142,108 @@ const Chat = () => {
     //Listen for incoming messages
     socket.on(
       "messageReceived",
-      ({ firstName, lastName, photoUrl, text, createdAt }) => {
-        console.log(firstName, " " + text);
+      ({
+        messageId,
+        firstName,
+        lastName,
+        photoUrl,
+        text,
+        createdAt,
+        status,
+      }) => {
+        console.log(firstName, text, "Status:", status);
 
+        // Message from OTHER user
         if (firstName !== user.firstName || lastName !== user.lastName) {
           setMessages((prevMessages) => [
             ...prevMessages,
-            { firstName, lastName, photoUrl, text, createdAt },
+            {
+              messageId,
+              senderId: targetUserId,
+              firstName,
+              lastName,
+              photoUrl,
+              text,
+              createdAt,
+              status: status || "delivered",
+            },
           ]);
+        }
+        // Message from CURRENT user (update temp message)
+        else {
+          setMessages((prevMessages) => {
+            const lastMsg = prevMessages[prevMessages.length - 1];
+
+            if (
+              lastMsg &&
+              lastMsg.senderId === userId &&
+              lastMsg.text === text &&
+              lastMsg.messageId.toString().startsWith("temp-")
+            ) {
+              const updatedMessages = [...prevMessages];
+
+              updatedMessages[updatedMessages.length - 1] = {
+                ...lastMsg,
+                messageId,
+                senderId: userId,
+                firstName,
+                lastName,
+                photoUrl,
+                text,
+                createdAt,
+                status: status || "sent",
+              };
+
+              return updatedMessages;
+            } else {
+              return (
+                [...prevMessages],
+                {
+                  messageId,
+                  senderId: userId,
+                  firstName,
+                  lastName,
+                  photoUrl,
+                  text,
+                  createdAt,
+                  status: status || "sent",
+                }
+              );
+            }
+
+            return prevMessages;
+          });
         }
       }
     );
+
+    socket.on("messageDelivered", ({ userId: deliveredUserId }) => {
+      console.log("messages delivered by user:", deliveredUserId);
+
+      if (deliveredUserId === targetUserId) {
+        setMessages((prevMessages) =>
+          prevMessages.map((msg) =>
+            msg.senderId === userId && msg.status === "sent"
+              ? { ...msg, status: "delivered" }
+              : msg
+          )
+        );
+      }
+    });
+
+    socket.on("messageSeen", ({ userId: seenUserId }) => {
+      console.log("messages seen by user:", seenUserId);
+
+      if (seenUserId === targetUserId) {
+        setMessages((prevMessages) =>
+          prevMessages.map((msg) =>
+            msg.senderId === userId && msg.status === "delivered"
+              ? { ...msg, status: "seen" }
+              : msg
+          )
+        );
+      }
+    });
 
     // Listen for online status updates
 
@@ -152,12 +276,16 @@ const Chat = () => {
       //Immediately adding the message to the local state(optimistic update)
 
       const newMsg = {
+        messageId: `temp-${Date.now()}`,
+        senderId: userId,
         firstName: user.firstName,
         lastName: user.lastName,
         photoUrl: user.photoUrl,
         text: newMessage,
         createdAt: new Date().toISOString(),
+        status: "sent",
       };
+
       setMessages((prevMessages) => [...prevMessages, newMsg]);
 
       //Then emiting to socket
@@ -230,6 +358,29 @@ const Chat = () => {
                 </time>
               </div>
               <div className="chat-bubble">{msg.text}</div>
+
+              <div className="chat-footer opacity-50 flex items-center gap-1">
+                {msg.senderId === userId && (
+                  <>
+                    {msg.status === "seen" && (
+                      <span className="text-blue-500" title="Seen">
+                        ✓✓
+                      </span>
+                    )}
+                    {msg.status === "delivered" && (
+                      <span className="text-gray-400" title="Delivered">
+                        ✓✓
+                      </span>
+                    )}
+                    {msg.status === "sent" && (
+                      <span className="text-gray-400" title="Sent">
+                        ✓
+                      </span>
+                    )}
+                  </>
+                )}
+              </div>
+
               <div className="chat-footer opacity-50">Seen</div>
             </div>
           );
